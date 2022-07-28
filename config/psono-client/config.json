@@ -1,0 +1,13 @@
+{
+    "backend_servers": [{
+      "title": "Psono DevCloud",
+      "url": "https://psono.oss.dev.cloud/server"
+    }],
+    "base_url": "https://psono.oss.dev.cloud/",
+    "allow_custom_server": true,
+    "allow_registration": true,
+    "allow_lost_password": true,
+    "disable_download_bar": false,
+    "authentication_methods": ["AUTHKEY", "LDAP"],
+    "saml_provider": []
+  }

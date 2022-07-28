@@ -1,0 +1,104 @@
+version: "3.3"
+services:
+  psono-database:
+    image: postgres:13-alpine
+    container_name: psono-database
+    volumes:
+      - /mnt/db/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=psono
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=psono
+    networks:
+        - psono-network
+    # ports:
+    #   - "5432:5432"
+    expose:
+      - 5432
+    restart: always
+
+  psono-server:
+    image: psono/psono-server-enterprise
+    container_name: psono-server
+    # volumes:
+    #   - ../config/psono-server/settings.yaml:/root/.psono_server/settings.yaml
+    #   - ../log/psono-server:/var/log/psono
+    environment:
+      - PSONO_SECRET_KEY=${PSONO_SECRET_KEY}
+      - PSONO_ACTIVATION_LINK_SECRET=${PSONO_ACTIVATION_LINK_SECRET}
+      - PSONO_DB_SECRET=${PSONO_DB_SECRET}
+      - PSONO_EMAIL_SECRET_SALT=${PSONO_EMAIL_SECRET_SALT}
+      - PSONO_PRIVATE_KEY=${PSONO_PRIVATE_KEY}
+      - PSONO_PUBLIC_KEY=${PSONO_PUBLIC_KEY}
+      - PSONO_WEB_CLIENT_URL=https://psono.oss.dev.cloud
+      - PSONO_HOST_URL=http://psono.oss.dev.cloud/server
+      - PSONO_ALLOWED_DOMAINS=oss.dev.cloud
+      - PSONO_AUTHENTICATION_METHODS=LDAP
+      - PSONO_LDAP=${PSONO_LDAP}
+      - PSONO_DATABASES_DEFAULT_ENGINE=django.db.backends.postgresql_psycopg2
+      - PSONO_DATABASES_DEFAULT_NAME=psono
+      - PSONO_DATABASES_DEFAULT_USER=psono
+      - PSONO_DATABASES_DEFAULT_PASSWORD=${PSONO_DATABASES_DEFAULT_PASSWORD}
+      - PSONO_DATABASES_DEFAULT_HOST=psono-database
+      - PSONO_DATABASES_DEFAULT_PORT=5432
+    networks:
+        - psono-network
+    ports:
+      - "10100:80"
+    expose:
+      - 80
+    links:
+      - psono-database
+    restart: always
+    depends_on:
+      - psono-database
+
+  psono-frontend:
+    image: nginx:alpine
+    container_name: psono-frontend
+    volumes:
+      - ../config/psono-frontend:/etc/nginx/conf.d
+    networks:
+        - psono-network
+    ports:
+      - "80:80"
+      - "443:443"
+    expose:
+      - 80
+      - 443
+    links:
+      - psono-server
+    restart: always
+    depends_on:
+      - psono-server
+
+  psono-client:
+    image: psono/psono-client:latest
+    container_name: psono-client
+    volumes:
+      - ../config/psono-client/config.json:/usr/share/nginx/html/config.json
+    networks:
+        - psono-network
+    expose:
+      - 10101
+    restart: always
+    depends_on:
+      - psono-server
+      - psono-frontend
+
+  psono-admin:
+    image: psono/psono-admin-client:latest
+    container_name: psono-admin
+    volumes:
+      - ../config/psono-client/config.json:/usr/share/nginx/html/portal/config.json
+    networks:
+        - psono-network
+    expose:
+      - 10102
+    restart: always
+    depends_on:
+      - psono-server
+      - psono-frontend   
+
+networks:
+  psono-network:
