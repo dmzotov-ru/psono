@@ -11,8 +11,6 @@ services:
       - POSTGRES_DB=psono
     networks:
         - psono-network
-    # ports:
-    #   - "5432:5432"
     expose:
       - 5432
     restart: always
@@ -20,9 +18,6 @@ services:
   psono-server:
     image: psono/psono-server-enterprise
     container_name: psono-server
-    # volumes:
-    #   - ../config/psono-server/settings.yaml:/root/.psono_server/settings.yaml
-    #   - ../log/psono-server:/var/log/psono
     environment:
       - PSONO_SECRET_KEY=${PSONO_SECRET_KEY}
       - PSONO_ACTIVATION_LINK_SECRET=${PSONO_ACTIVATION_LINK_SECRET}
